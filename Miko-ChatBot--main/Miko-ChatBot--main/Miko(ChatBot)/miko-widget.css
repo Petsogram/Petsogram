@@ -1,0 +1,378 @@
+/* ==========================================================================
+   Miko — Chat Widget for Pet Welfare & Adoption Platforms
+   Design tokens: warm marigold (community/adoption) + deep teal (trust/vet
+   care) + coral (urgent/emergency), grounded on a soft paper background.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+
+#miko-root {
+  --miko-ink: #21302A;
+  --miko-paper: #FAF6EF;
+  --miko-card: #FFFFFF;
+  --miko-teal: #2F6E68;
+  --miko-teal-dark: #1F4E4A;
+  --miko-marigold: #E8A33D;
+  --miko-marigold-dark: #C6842A;
+  --miko-coral: #D6573F;
+  --miko-coral-dark: #B8442E;
+  --miko-line: rgba(33, 48, 42, 0.12);
+  --miko-text-soft: rgba(33, 48, 42, 0.62);
+  --miko-radius-lg: 20px;
+  --miko-radius-md: 14px;
+  --miko-radius-sm: 10px;
+  --miko-shadow: 0 18px 40px rgba(33, 48, 42, 0.22);
+  --miko-font-display: 'Fraunces', Georgia, serif;
+  --miko-font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  position: fixed;
+  z-index: 999999;
+  bottom: 0;
+  right: 0;
+  font-family: var(--miko-font-body);
+  color: var(--miko-ink);
+}
+
+#miko-root *, #miko-root *::before, #miko-root *::after {
+  box-sizing: border-box;
+}
+
+/* ---------- Launcher ---------- */
+
+#miko-launcher {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(155deg, var(--miko-teal), var(--miko-teal-dark));
+  box-shadow: var(--miko-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+#miko-launcher:hover { transform: translateY(-2px) scale(1.03); }
+#miko-launcher:focus-visible { outline: 3px solid var(--miko-marigold); outline-offset: 3px; }
+
+#miko-launcher svg { width: 28px; height: 28px; }
+
+#miko-launcher::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid var(--miko-teal);
+  opacity: 0.5;
+  animation: miko-breathe 2.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #miko-launcher::before { animation: none; }
+}
+
+@keyframes miko-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.45; }
+  50% { transform: scale(1.14); opacity: 0; }
+}
+
+#miko-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--miko-coral);
+  border: 2px solid var(--miko-paper);
+}
+
+#miko-badge[hidden] { display: none; }
+
+/* ---------- Panel ---------- */
+
+#miko-panel {
+  position: fixed;
+  bottom: 100px;
+  right: 24px;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  height: 600px;
+  max-height: calc(100vh - 140px);
+  background: var(--miko-paper);
+  border-radius: var(--miko-radius-lg);
+  box-shadow: var(--miko-shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--miko-line);
+}
+
+#miko-panel[hidden] { display: none; }
+
+@media (max-width: 480px) {
+  #miko-panel {
+    bottom: 0;
+    right: 0;
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}
+
+/* ---------- Header ---------- */
+
+#miko-header {
+  background: linear-gradient(135deg, var(--miko-teal), var(--miko-teal-dark));
+  color: #fff;
+  padding: 16px 16px 16px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+#miko-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+#miko-avatar svg { width: 22px; height: 22px; }
+
+#miko-header-text { flex: 1; min-width: 0; }
+
+#miko-header-text h1 {
+  font-family: var(--miko-font-display);
+  font-weight: 600;
+  font-size: 17px;
+  margin: 0;
+  line-height: 1.2;
+}
+
+#miko-header-text p {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  opacity: 0.88;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+#miko-header-text p::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #8FE3B0;
+  display: inline-block;
+}
+
+#miko-close {
+  background: none;
+  border: none;
+  color: #fff;
+  opacity: 0.85;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+}
+
+#miko-close:hover { opacity: 1; background: rgba(255,255,255,0.12); }
+#miko-close svg { width: 18px; height: 18px; }
+
+/* ---------- Quick actions ---------- */
+
+#miko-quick-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--miko-line);
+  background: var(--miko-card);
+  scrollbar-width: thin;
+}
+
+.miko-chip {
+  flex-shrink: 0;
+  border: 1px solid var(--miko-line);
+  background: var(--miko-paper);
+  color: var(--miko-ink);
+  font-family: var(--miko-font-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.miko-chip:hover { background: #F0EAD9; transform: translateY(-1px); }
+
+.miko-chip.miko-chip--urgent {
+  background: var(--miko-coral);
+  border-color: var(--miko-coral);
+  color: #fff;
+}
+
+.miko-chip.miko-chip--urgent:hover { background: var(--miko-coral-dark); }
+
+/* ---------- Messages ---------- */
+
+#miko-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.miko-msg {
+  max-width: 82%;
+  padding: 10px 13px;
+  border-radius: var(--miko-radius-md);
+  font-size: 13.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.miko-msg--bot {
+  align-self: flex-start;
+  background: var(--miko-card);
+  border: 1px solid var(--miko-line);
+  border-bottom-left-radius: 4px;
+}
+
+.miko-msg--user {
+  align-self: flex-end;
+  background: var(--miko-marigold);
+  color: #3A2A0F;
+  border-bottom-right-radius: 4px;
+  font-weight: 500;
+}
+
+.miko-msg-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 7px 12px;
+  background: var(--miko-teal);
+  color: #fff;
+  border-radius: var(--miko-radius-sm);
+  text-decoration: none;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.miko-msg-cta:hover { background: var(--miko-teal-dark); }
+
+.miko-msg--bot.miko-msg--emergency {
+  border: 1px solid var(--miko-coral);
+  background: #FCEEE9;
+}
+
+.miko-msg--bot.miko-msg--emergency .miko-msg-cta {
+  background: var(--miko-coral);
+}
+
+.miko-msg--bot.miko-msg--emergency .miko-msg-cta:hover {
+  background: var(--miko-coral-dark);
+}
+
+/* ---------- Typing indicator (signature element: paw trail) ---------- */
+
+#miko-typing {
+  align-self: flex-start;
+  display: flex;
+  gap: 4px;
+  padding: 10px 13px;
+  background: var(--miko-card);
+  border: 1px solid var(--miko-line);
+  border-radius: var(--miko-radius-md);
+  border-bottom-left-radius: 4px;
+  margin: 0 14px 10px;
+  width: fit-content;
+}
+
+#miko-typing[hidden] { display: none; }
+
+#miko-typing .miko-paw {
+  width: 12px;
+  height: 12px;
+  opacity: 0.25;
+  animation: miko-paw-step 1.2s ease-in-out infinite;
+}
+
+#miko-typing .miko-paw:nth-child(2) { animation-delay: 0.15s; }
+#miko-typing .miko-paw:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes miko-paw-step {
+  0%, 60%, 100% { opacity: 0.2; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
+/* ---------- Input ---------- */
+
+#miko-input-form {
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--miko-line);
+  background: var(--miko-card);
+}
+
+#miko-input {
+  flex: 1;
+  border: 1px solid var(--miko-line);
+  background: var(--miko-paper);
+  border-radius: 999px;
+  padding: 10px 15px;
+  font-family: var(--miko-font-body);
+  font-size: 13.5px;
+  color: var(--miko-ink);
+}
+
+#miko-input:focus {
+  outline: none;
+  border-color: var(--miko-teal);
+}
+
+#miko-send {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--miko-teal);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+#miko-send:hover { background: var(--miko-teal-dark); }
+#miko-send:disabled { opacity: 0.5; cursor: default; }
+#miko-send svg { width: 17px; height: 17px; }
+
+#miko-messages::-webkit-scrollbar,
+#miko-quick-actions::-webkit-scrollbar { width: 6px; height: 6px; }
+#miko-messages::-webkit-scrollbar-thumb { background: var(--miko-line); border-radius: 999px; }

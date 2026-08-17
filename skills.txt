@@ -1,0 +1,5 @@
+npx claude-code-templates@latest --skill creative-design/frontend-design
+
+npx claude-code-templates@latest --skill creative-design/ui-ux-pro-max
+
+npx claude-code-templates@latest --skill development/senior-architect

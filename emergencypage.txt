@@ -1,0 +1,300 @@
+function EmergencyPage({ toast }) {
+  const rewards = useRewards();
+  const [step, setStep] = useState("form");
+  const [severity, setSeverity] = useState("High");
+  const [animalType, setAnimalType] = useState("Dog");
+  const [desc, setDesc] = useState("");
+  const [reporterLocation, setReporterLocation] = useState(null);
+    const [pickupPoint, setPickupPoint] = useState(null);
+    const [locationMethod, setLocationMethod] = useState("current");
+    const [manualAddress, setManualAddress] = useState("");
+    
+    const fetchCurrentLocation = () => {
+      if (!navigator.geolocation) {
+        toast.push("Geolocation is not supported by your browser", "rose");
+        return;
+      }
+      toast.push("Fetching location...", "amber");
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude, timestamp: pos.timestamp };
+          setReporterLocation(coords); // independent snapshot
+          if (locationMethod === "current") {
+            setPickupPoint({ ...coords, address: "Current Location" }); // fixed pickup
+          }
+          toast.push("Location acquired successfully!");
+        },
+        (err) => toast.push("Failed to get location: " + err.message, "rose"),
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+      );
+    };
+  const [caseId] = useState(`PS-RQ-${Math.floor(1000 + Math.random() * 9000)}`);
+  const [rescueRequested, setRescueRequested] = useState(false);
+
+  const nearby = PROVIDERS.filter((p) => ["Vets", "Rescuers", "Shelters", "NGOs"].includes(p.type)).slice(0, 5);
+
+  const submit = () => {
+    if (!desc.trim()) { toast.push("Describe the situation before submitting", "amber"); return; }
+    setStep("result");
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto px-6 py-12">
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center"><Siren className="text-white" size={20} /></div>
+        <h1 className="text-3xl font-bold text-stone-900" style={fontDisplay}>Animal Emergency Assistance</h1>
+      </div>
+      <p className="text-stone-500 mb-8">Report an injured or at-risk animal and get connected to the nearest verified help, instantly.</p>
+
+      {step === "form" && (
+        <div className="grid lg:grid-cols-3 gap-8">
+          <Card className="p-6 lg:col-span-2 space-y-6">
+            <div>
+              <label className="text-sm font-semibold text-stone-700 block mb-2">Upload photo or video</label>
+              <ImageUploader toast={toast} />
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-stone-700 block mb-2">Animal type</label>
+              <div className="flex gap-2 flex-wrap">
+                {["Dog", "Cat", "Bird", "Cattle", "Other"].map((t) => (
+                  <button key={t} onClick={() => setAnimalType(t)} className={`px-4 py-2 rounded-lg text-sm font-medium border ${animalType === t ? "bg-emerald-700 text-white border-emerald-700" : "bg-white text-stone-600 border-stone-200"}`}>{t}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-stone-700 block mb-2">Describe the situation</label>
+              <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={4} placeholder="E.g. Injured dog near the highway service road, unable to walk..." className="w-full rounded-xl border border-stone-300 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-stone-700 block mb-2">Location</label>
+              <button onClick={() => { setLocated(true); toast.push("Location shared"); }} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border ${located ? "bg-emerald-50 border-emerald-300 text-emerald-700" : "bg-white border-stone-300 text-stone-600"}`}>
+                <MapPin size={16} /> {located ? "Location shared: Andheri West, Mumbai" : "Share current location"}
+              </button>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-stone-700 block mb-2">Emergency severity</label>
+              <div className="grid grid-cols-4 gap-2">
+                {[{ l: "Critical", c: "rose" }, { l: "High", c: "amber" }, { l: "Moderate", c: "blue" }, { l: "Low", c: "emerald" }].map((s) => (
+                  <button key={s.l} onClick={() => setSeverity(s.l)} className={`py-2.5 rounded-lg text-sm font-semibold border ${severity === s.l ? "bg-stone-900 text-white border-stone-900" : "bg-white text-stone-600 border-stone-200"}`}>{s.l}</button>
+                ))}
+              </div>
+            </div>
+            <Button variant="emergency" onClick={submit} className="w-full py-3"><Siren size={17} /> Submit emergency report</Button>
+          </Card>
+
+          <div className="space-y-4">
+            <Card className="p-5 bg-amber-50 border-amber-200">
+              <div className="flex items-center gap-2 mb-2"><Sparkles size={16} className="text-amber-700" /><p className="font-semibold text-amber-800 text-sm">AI emergency triage</p></div>
+              <p className="text-xs text-amber-700 leading-relaxed">Once submitted, our AI assistant analyzes the photo and description to suggest a priority level, helping responders act faster. This is assistance only, not a diagnosis.</p>
+            </Card>
+            <Card className="p-5">
+              <p className="font-semibold text-stone-800 text-sm mb-3">What happens next</p>
+              <ol className="space-y-3 text-sm text-stone-500">
+                {["Report is triaged instantly", "Nearest vet & rescuer notified", "Rescue request is created", "You get live status updates"].map((s, i) => (
+                  <li key={s} className="flex items-start gap-2"><span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>{s}</li>
+                ))}
+              </ol>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {step === "result" && (
+        <div className="space-y-8">
+          <Card className="p-6 border-amber-300 bg-amber-50 flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center"><AlertTriangle className="text-white" size={22} /></div>
+              <div>
+                <p className="text-xs font-semibold text-amber-700 flex items-center gap-1.5"><Sparkles size={13} /> AI-ASSISTED TRIAGE</p>
+                <p className="text-xl font-bold text-stone-900" style={fontDisplay}>Priority: {severity.toUpperCase()}</p>
+              </div>
+            </div>
+            <p className="text-sm text-amber-800 font-medium max-w-sm">Seek professional veterinary assistance immediately. This assessment does not replace a licensed veterinarian.</p>
+          </Card>
+
+          <div>
+            <h3 className="text-lg font-bold text-stone-900 mb-4" style={fontDisplay}>Nearby help</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              {nearby.map((p) => (
+                <Card key={p.id} className="p-5 flex items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-stone-900 text-sm">{p.name}</p>
+                      {p.verified && <BadgeCheck size={15} className="text-emerald-600" />}
+                    </div>
+                    <p className="text-xs text-stone-500 mt-1">{p.type} • {p.distance} • {p.location}</p>
+                    <div className="flex items-center gap-3 mt-2 text-xs">
+                      <span className={`font-medium ${p.open ? "text-emerald-600" : "text-rose-500"}`}>{p.open ? "Open now" : "Closed"}</span>
+                      <span className="flex items-center gap-1 text-stone-500"><Star size={12} className="fill-amber-400 text-amber-400" /> {p.rating}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2 shrink-0">
+                    <button onClick={() => toast.push(`Calling ${p.name}...`)} className="p-2 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100"><Phone size={16} /></button>
+                    <button onClick={() => toast.push("Opening navigation...")} className="p-2 rounded-lg bg-stone-100 text-stone-600 hover:bg-stone-200"><Navigation size={16} /></button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <Button variant="emergency" disabled={rescueRequested} onClick={() => {
+              setRescueRequested(true);
+              toast.push(`Rescue request created — case #${caseId}`);
+              rewards.submitForVerification("rescue", caseId, "Verified animal rescue");
+            }}>
+              <Truck size={16} /> {rescueRequested ? "Rescue requested" : "Request Rescue"}
+            </Button>
+            <Button variant="secondary" onClick={() => toast.push("Connecting you to on-call veterinary help...")}><Phone size={16} /> Call Veterinary Help</Button>
+            <Button variant="ghost" onClick={() => setStep("form")}><ArrowLeft size={16} /> Submit another report</Button>
+          </div>
+          {rescueRequested && (
+            <Card className="p-4 bg-emerald-50 border-emerald-200 flex items-center gap-3">
+              <Gift size={18} className="text-emerald-700 shrink-0" />
+              <p className="text-sm text-emerald-800">Case <span className="font-mono font-semibold">#{caseId}</span> is pending verification. Once our team confirms the rescue, you'll earn <span className="font-semibold">+100 P-Points</span> automatically.</p>
+            </Card>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------- DISCOVER PAGE ---------------------------------- */
+function DiscoverPage() {
+  const [tab, setTab] = useState("Vets");
+  const [openOnly, setOpenOnly] = useState(false);
+  const tabs = ["Vets", "Shelters", "NGOs", "Rescuers", "Groomers", "Pet Services"];
+  const results = PROVIDERS.filter((p) => p.type === tab).filter((p) => !openOnly || p.open);
+
+  return (
+    <div className="max-w-7xl mx-auto px-6 py-12">
+      <SectionHeading eyebrow="Nearby & verified" title="Discover care around you" subtitle="Browse verified vets, shelters, NGOs, rescuers and service providers near your location." />
+      <div className="flex gap-2 flex-wrap mb-8 border-b border-stone-200 pb-4">
+        {tabs.map((t) => (
+          <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 rounded-lg text-sm font-semibold ${tab === t ? "bg-emerald-700 text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"}`}>{t}</button>
+        ))}
+      </div>
+      <div className="grid lg:grid-cols-4 gap-8">
+        <Card className="p-5 h-fit lg:sticky lg:top-24">
+          <p className="font-semibold text-stone-800 text-sm mb-4 flex items-center gap-2"><Filter size={15} /> Filters</p>
+          <div className="space-y-4 text-sm">
+            <div>
+              <p className="text-stone-500 mb-2 font-medium">Distance</p>
+              <input type="range" className="w-full accent-emerald-700" />
+            </div>
+            <div>
+              <p className="text-stone-500 mb-2 font-medium">Minimum rating</p>
+              <div className="flex gap-1">{[1, 2, 3, 4, 5].map((i) => <Star key={i} size={16} className="text-amber-400 fill-amber-400" />)}</div>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={openOnly} onChange={(e) => setOpenOnly(e.target.checked)} className="accent-emerald-700 w-4 h-4" /> Open now
+            </label>
+          </div>
+        </Card>
+        <div className="lg:col-span-3 grid md:grid-cols-2 gap-5">
+          {results.length === 0 && <p className="text-stone-400 text-sm">No results match your filters.</p>}
+          {results.map((p) => (
+            <Card key={p.id} className="p-5 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-stone-300/40 transition-all duration-200">
+              <div className="flex items-start justify-between">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 flex items-center justify-center"><Building2 size={20} className="text-emerald-700" /></div>
+                {p.verified && <Badge>Verified</Badge>}
+              </div>
+              <p className="font-semibold text-stone-900 mt-3">{p.name}</p>
+              <p className="text-xs text-stone-500 mt-1 flex items-center gap-1"><MapPin size={12} /> {p.location} • {p.distance}</p>
+              <div className="flex items-center gap-3 mt-2 text-xs">
+                <span className="flex items-center gap-1 text-stone-600"><Star size={12} className="fill-amber-400 text-amber-400" /> {p.rating}</span>
+                <span className={p.open ? "text-emerald-600 font-medium" : "text-rose-500 font-medium"}>{p.open ? "Open" : "Closed"}</span>
+              </div>
+              <div className="flex gap-2 mt-4">
+                <Button variant="secondary" className="flex-1 text-xs py-2"><Phone size={13} /> {p.phone}</Button>
+                <Button variant="primary" className="text-xs py-2">View <ChevronRight size={13} /></Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- ADOPT + PROFILE ---------------------------------- */
+function AdoptPage({ setPage, setSelectedAnimal }) {
+  const [species, setSpecies] = useState("All");
+  const filtered = ANIMALS.filter((a) => species === "All" || a.species === species);
+  return (
+    <div className="max-w-7xl mx-auto px-6 py-12">
+      <SectionHeading eyebrow="Find your companion" title="Animals ready for adoption" subtitle="Every profile includes health status and an AI-assisted compatibility match based on your lifestyle." />
+      <div className="flex gap-2 flex-wrap mb-8">
+        {["All", "Dog", "Cat", "Bird", "Other"].map((s) => (
+          <button key={s} onClick={() => setSpecies(s)} className={`px-4 py-2 rounded-lg text-sm font-semibold border ${species === s ? "bg-emerald-700 text-white border-emerald-700" : "bg-white text-stone-600 border-stone-200"}`}>{s}</button>
+        ))}
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filtered.map((a) => (
+          <Card key={a.id} className="overflow-hidden group hover:-translate-y-1 hover:shadow-lg hover:shadow-stone-300/40 transition-all duration-200">
+            <div className="relative overflow-hidden">
+              <img src={a.img} alt={a.name} className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300" />
+              <div className="absolute top-3 right-3 bg-white/95 backdrop-blur rounded-full px-3 py-1 text-xs font-bold text-emerald-700 flex items-center gap-1 shadow-sm"><Sparkles size={12} /> {a.match}% match</div>
+            </div>
+            <div className="p-5">
+              <div className="flex items-center justify-between">
+                <p className="font-bold text-stone-900 text-lg" style={fontDisplay}>{a.name}</p>
+                {a.vaccinated && <Badge>Vaccinated</Badge>}
+              </div>
+              <p className="text-sm text-stone-500 mt-1">{a.species} • {a.age} • {a.gender}</p>
+              <p className="text-sm text-stone-500 flex items-center gap-1 mt-1"><MapPin size={13} /> {a.location}</p>
+              <div className="flex gap-2 mt-4">
+                <Button variant="secondary" className="flex-1 text-xs py-2" onClick={() => { setSelectedAnimal(a); setPage("animalProfile"); }}>View Profile</Button>
+                <Button variant="primary" className="flex-1 text-xs py-2" onClick={() => { setSelectedAnimal(a); setPage("animalProfile"); }}>Apply to Adopt</Button>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AnimalProfilePage({ animal, setPage, toast }) {
+  const auth = useAuth();
+  const rewards = useRewards();
+  const [applied, setApplied] = useState(false);
+  if (!animal) return <div className="max-w-3xl mx-auto px-6 py-20 text-center text-stone-500">Select an animal from the Adopt page first. <button className="text-emerald-700 font-semibold underline" onClick={() => setPage("adopt")}>Go to Adopt</button></div>;
+  return (
+    <div className="max-w-6xl mx-auto px-6 py-12">
+      <button onClick={() => setPage("adopt")} className="text-sm text-stone-500 flex items-center gap-1 mb-6 hover:text-stone-800"><ArrowLeft size={15} /> Back to all animals</button>
+      <div className="grid lg:grid-cols-2 gap-10">
+        <div>
+          <img src={animal.img} className="w-full h-[420px] object-cover rounded-2xl" alt={animal.name} />
+          <div className="grid grid-cols-3 gap-3 mt-3">
+            {[1, 2, 3].map((i) => <div key={i} className="h-24 rounded-xl bg-stone-100 flex items-center justify-center text-stone-300"><Camera size={20} /></div>)}
+          </div>
+        </div>
+        <div>
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-stone-900" style={fontDisplay}>{animal.name}</h1>
+            <div className="bg-emerald-50 rounded-full px-3 py-1 text-sm font-bold text-emerald-700 flex items-center gap-1"><Sparkles size={13} /> {animal.match}% AI match</div>
+          </div>
+          <p className="text-stone-500 mt-1">{animal.breed} • {animal.gender} • {animal.age}</p>
+          <div className="grid grid-cols-2 gap-3 mt-6">
+            {[
+              { l: "Location", v: animal.location, icon: MapPin },
+              { l: "Health", v: animal.medical, icon: Stethoscope },
+              { l: "Vaccinated", v: animal.vaccinated ? "Yes" : "Pending", icon: ShieldCheck },
+              { l: "Temperament", v: animal.temperament, icon: Heart },
+            ].map((f) => (
+              <div key={f.l} className="bg-stone-50 rounded-xl p-3">
+                <p className="text-xs text-stone-400 flex items-center gap-1"><f.icon size={12} /> {f.l}</p>
+                <p className="text-sm font-semibold text-stone-800 mt-0.5">{f.v}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-6">
+            <p className="font-semibold text-stone-800 text-sm mb-2">Rescue story</p>
+            <p className="text-sm text-stone-500 leading-relaxed">{animal.story}</p>
+          </div>
+          <div className="mt-6">
+            <p className="font-semibold text-stone-800 text-sm mb-2">Care requirements</p>
+            <p className="text-sm text-stone-500 leading-relaxed">Regular exercise, balanced diet, routine vet checkups, and a loving, patient household.</p>
+          </div>

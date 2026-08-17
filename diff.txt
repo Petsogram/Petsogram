@@ -1,0 +1,452 @@
+diff --git a/d:/Petsogram/Petsogram (3).jsx b/d:/Petsogram/src/App.jsx
+index 824081e..42be87a 100644
+--- a/d:/Petsogram/Petsogram (3).jsx	
++++ b/d:/Petsogram/src/App.jsx
+@@ -1,4 +1,6 @@
+ import React, { useState, useEffect, useMemo } from "react";
++import { useAuth } from "./contexts/AuthContext";
++import { MikoChatbot } from "./components/MikoChatbot.jsx";
+ import {
+   Heart, Search, Bell, User, Menu, X, MapPin, Star, Phone, Navigation,
+   Stethoscope, Home as HomeIcon, ShieldAlert, Users, Wrench, ShoppingBag,
+@@ -24,127 +26,9 @@ function useFonts() {
+ const fontDisplay = { fontFamily: "'Sora', sans-serif" };
+ const fontBody = { fontFamily: "'Inter', sans-serif" };
+ 
+-/* ---------------------------------- MOCK DATA ---------------------------------- */
+-const ANIMALS = [
+-  { id: 1, name: "Bruno", species: "Dog", breed: "Indie", age: "2 years", gender: "Male", location: "Mumbai", vaccinated: true, medical: "Healthy", match: 92, img: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600", story: "Bruno was rescued from a construction site in Andheri after being abandoned by a previous owner. He's playful, loyal, and loves belly rubs.", temperament: "Friendly, energetic, great with kids" },
+-  { id: 2, name: "Luna", species: "Cat", breed: "Domestic Shorthair", age: "1 year", gender: "Female", location: "Pune", vaccinated: true, medical: "Recovering - minor limp", img: "https://images.unsplash.com/photo-1533738363-b7f9aef128ce?w=600", match: 87, story: "Luna was found injured near a market and nursed back to health by our partner vet. She's shy at first but incredibly affectionate once comfortable.", temperament: "Calm, independent, affectionate" },
+-  { id: 3, name: "Milo", species: "Dog", breed: "Labrador Mix", age: "4 years", gender: "Male", location: "Thane", vaccinated: true, medical: "Healthy", img: "https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=600", match: 78, story: "Milo's owner relocated abroad and couldn't take him along. He's house-trained and used to apartment living.", temperament: "Gentle, obedient, good with other dogs" },
+-  { id: 4, name: "Coco", species: "Bird", breed: "Budgerigar", age: "8 months", gender: "Female", location: "Navi Mumbai", vaccinated: false, medical: "Healthy", img: "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?w=600", match: 65, story: "Coco was surrendered by a family who could no longer care for her. She chirps happily whenever someone talks to her.", temperament: "Chatty, curious, bonds closely with one person" },
+-  { id: 5, name: "Max", species: "Dog", breed: "German Shepherd Mix", age: "3 years", gender: "Male", location: "Mumbai", vaccinated: true, medical: "Healthy", img: "https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?w=600", match: 95, story: "Max was rescued during a flood rescue operation. He's protective, intelligent, and highly trainable.", temperament: "Alert, loyal, needs an active household" },
+-  { id: 6, name: "Simba", species: "Cat", breed: "Indie", age: "6 months", gender: "Male", location: "Pune", vaccinated: true, medical: "Healthy", img: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=600", match: 81, story: "Simba was born to a rescued street cat and has been hand-raised by volunteers since birth.", temperament: "Playful, curious, great with kids" },
+-];
+-
+-const PROVIDERS = [
+-  { id: 1, name: "Sunrise Veterinary Hospital", type: "Vets", verified: true, rating: 4.8, distance: "1.2 km", open: true, phone: "+91 98200 11122", location: "Andheri West, Mumbai" },
+-  { id: 2, name: "Second Chance Animal Shelter", type: "Shelters", verified: true, rating: 4.6, distance: "2.4 km", open: true, phone: "+91 98200 22233", location: "Bandra, Mumbai" },
+-  { id: 3, name: "PawCare NGO Trust", type: "NGOs", verified: true, rating: 4.9, distance: "3.1 km", open: false, phone: "+91 98200 33344", location: "Powai, Mumbai" },
+-  { id: 4, name: "Rapid Rescue Volunteers", type: "Rescuers", verified: true, rating: 4.7, distance: "0.8 km", open: true, phone: "+91 98200 44455", location: "Ghatkopar, Mumbai" },
+-  { id: 5, name: "Furry Fresh Grooming Studio", type: "Groomers", verified: false, rating: 4.4, distance: "1.9 km", open: true, phone: "+91 98200 55566", location: "Thane West" },
+-  { id: 6, name: "Happy Paws Pet Services", type: "Pet Services", verified: true, rating: 4.5, distance: "2.7 km", open: true, phone: "+91 98200 66677", location: "Navi Mumbai" },
+-  { id: 7, name: "CityCare Veterinary Clinic", type: "Vets", verified: true, rating: 4.6, distance: "4.0 km", open: true, phone: "+91 98200 77788", location: "Pune" },
+-  { id: 8, name: "Shelter of Hope", type: "Shelters", verified: true, rating: 4.3, distance: "5.2 km", open: false, phone: "+91 98200 88899", location: "Thane" },
+-];
+-
+-const EVENTS = [
+-  { id: 1, name: "Mumbai Mega Adoption Drive", date: "24 Aug 2026", time: "10:00 AM", location: "Bandra Amphitheatre, Mumbai", participants: 214, price: "Free", img: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=600" },
+-  { id: 2, name: "Free Rabies Vaccination Camp", date: "29 Aug 2026", time: "9:00 AM", location: "Powai Community Ground", participants: 132, price: "Free", img: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=600" },
+-  { id: 3, name: "Street Dog Feeding Meetup", date: "5 Sep 2026", time: "6:30 PM", location: "Juhu Beach, Mumbai", participants: 88, price: "Free", img: "https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?w=600" },
+-  { id: 4, name: "Volunteer Onboarding Workshop", date: "12 Sep 2026", time: "11:00 AM", location: "Petsogram HQ, Pune", participants: 47, price: "Free", img: "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8?w=600" },
+-  { id: 5, name: "Pet Photography Workshop", date: "19 Sep 2026", time: "3:00 PM", location: "Powai, Mumbai", participants: 36, price: "₹500", img: "https://images.unsplash.com/photo-1517849845537-4d257902861a?w=600" },
+-  { id: 6, name: "Animal First Aid Workshop", date: "27 Sep 2026", time: "10:00 AM", location: "Andheri, Mumbai", participants: 58, price: "₹800", img: "https://images.unsplash.com/photo-1601979031925-424e53b6caaa?w=600" },
+-];
+-
+-const POSTS = [
+-  { id: 1, author: "Ananya Rao", group: "Animal Rescuers", time: "2h ago", text: "Successfully relocated a family of kittens from a construction site in Chembur. All five are now safe and being fostered!", likes: 214, comments: 32, img: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=600" },
+-  { id: 2, author: "Rohan Mehta", group: "Dog Lovers", time: "5h ago", text: "Reminder: monsoon season means more skin infections in strays. Carrying basic antiseptic can genuinely save a life.", likes: 156, comments: 18 },
+-  { id: 3, author: "Petsogram NGO Partners", group: "Animal Welfare", time: "1d ago", text: "This month we crossed 12,000 successful sterilizations across Mumbai and Pune. Thank you to every volunteer and donor.", likes: 542, comments: 61, img: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=600" },
+-];
+-
+-const PRODUCTS = {
+-  New: [
+-    { id: 1, name: "Premium Dry Dog Food 10kg", price: "₹2,199", condition: "New", location: "Mumbai", verified: true, img: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400" },
+-    { id: 2, name: "Orthopedic Pet Bed", price: "₹1,499", condition: "New", location: "Pune", verified: true, img: "https://images.unsplash.com/photo-1601979031925-424e53b6caaa?w=400" },
+-    { id: 3, name: "Adjustable Nylon Leash", price: "₹399", condition: "New", location: "Thane", verified: false, img: "https://images.unsplash.com/photo-1601758064135-8c319d3f5ee5?w=400" },
+-  ],
+-  "Pre-Owned": [
+-    { id: 4, name: "Wire Dog Crate (Medium)", price: "₹1,200", condition: "Good", location: "Navi Mumbai", verified: true, img: "https://images.unsplash.com/photo-1583512603805-3cc6b41f3edb?w=400" },
+-    { id: 5, name: "Cat Tree Tower", price: "₹900", condition: "Fair", location: "Mumbai", verified: false, img: "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=400" },
+-  ],
+-  Donate: [
+-    { id: 6, name: "Unused Puppy Food Pack", price: "Free", condition: "New", location: "Pune", verified: true, img: "https://images.unsplash.com/photo-1568640347023-a616a30bc3bd?w=400" },
+-    { id: 7, name: "Old Blankets & Towels", price: "Free", condition: "Used", location: "Mumbai", verified: true, img: "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=400" },
+-  ],
+-};
+-
+-const SERVICES = {
+-  Veterinary: [{ id: 1, name: "Dr. Kavita Shah - Home Visit Vet", rating: 4.9, price: "From ₹600", location: "Mumbai" }],
+-  Grooming: [{ id: 2, name: "PetStyle Grooming Salon", rating: 4.7, price: "From ₹450", location: "Pune" }],
+-  Training: [{ id: 3, name: "Bark & Learn Dog Training", rating: 4.8, price: "From ₹2,000/session", location: "Thane" }],
+-  Boarding: [{ id: 4, name: "Cozy Paws Boarding House", rating: 4.5, price: "From ₹700/day", location: "Mumbai" }],
+-  "Pet Sitting": [{ id: 5, name: "Sana's Pet Sitting", rating: 4.6, price: "From ₹500/day", location: "Navi Mumbai" }],
+-  Walking: [{ id: 6, name: "Daily Wag Dog Walkers", rating: 4.4, price: "From ₹300/walk", location: "Pune" }],
+-};
+-
+-/* ---------------------------------- REWARDS: CONFIG & RULES ---------------------------------- */
+-// rewardsConfig.ts (kept as a single source of truth — do not duplicate these numbers elsewhere)
+-const rewardsConfig = {
+-  redemptionTiers: [
+-    { points: 100, discount: 10 },
+-    { points: 250, discount: 30 },
+-    { points: 500, discount: 75 },
+-    { points: 1000, discount: 150 },
+-  ],
+-  maxMarketplaceDiscountPct: 20,
+-  maxEventDiscountPct: 30,
+-};
+-
+-const REWARD_RULES = [
+-  { action_type: "rescue", label: "Help / rescue an animal", points: 100, icon: Truck },
+-  { action_type: "abuse_report", label: "Verified abuse report", points: 50, icon: FileWarning },
+-  { action_type: "event_attendance", label: "Attend a community event", points: 30, icon: CalendarDays },
+-  { action_type: "volunteer", label: "Volunteer at an event", points: 75, icon: Users },
+-  { action_type: "adoption", label: "Successful adoption", points: 150, icon: HomeIcon },
+-  { action_type: "foster", label: "Foster an animal", points: 100, icon: HeartHandshake },
+-  { action_type: "donate_supplies", label: "Donate pet supplies", points: 50, icon: Package },
+-  { action_type: "help_owner", label: "Help another pet owner", points: 25, icon: Heart },
+-  { action_type: "organize_event", label: "Organize a verified event", points: 100, icon: Award },
+-  { action_type: "welfare_task", label: "Complete a verified welfare task", points: 50, icon: CheckCircle2 },
+-];
+-
+-function parseRupees(str) {
+-  if (!str) return 0;
+-  const n = parseFloat(String(str).replace(/[^\d.]/g, ""));
+-  return isNaN(n) ? 0 : n;
+-}
+-
+-// Points → rupee value, based on the nearest configured tier at or below the given points
+-function pointsToDiscountValue(points) {
+-  if (points <= 0) return 0;
+-  let best = null;
+-  for (const t of rewardsConfig.redemptionTiers) if (points >= t.points) best = t;
+-  if (!best) return 0;
+-  return Math.round(points * (best.discount / best.points));
+-}
+-
+-function calculateMarketplaceDiscount(points, priceStr) {
+-  const price = parseRupees(priceStr);
+-  const maxDiscount = Math.floor(price * (rewardsConfig.maxMarketplaceDiscountPct / 100));
+-  const discount = Math.min(pointsToDiscountValue(points), maxDiscount, price);
+-  return { discount, maxDiscount, finalPrice: Math.max(price - discount, 0) };
+-}
+-
+-function calculateEventDiscount(points, priceStr) {
+-  const price = parseRupees(priceStr);
+-  const maxDiscount = Math.floor(price * (rewardsConfig.maxEventDiscountPct / 100));
+-  const discount = Math.min(pointsToDiscountValue(points), maxDiscount, price);
+-  return { discount, maxDiscount, finalPrice: Math.max(price - discount, 0) };
+-}
+-
+-function canRedeemPoints(balance, points) {
+-  return points > 0 && points <= balance;
+-}
+-
+ /* ---------------------------------- REWARDS: CONTEXT / PROVIDER ---------------------------------- */
++import { ANIMALS, PROVIDERS, EVENTS, POSTS, PRODUCTS, SERVICES, rewardsConfig, REWARD_RULES, parseRupees, pointsToDiscountValue, calculateMarketplaceDiscount, calculateEventDiscount, canRedeemPoints } from './data/mockData';
++
+ const RewardsContext = React.createContext(null);
+ function useRewards() {
+   return React.useContext(RewardsContext);
+@@ -376,6 +260,7 @@ function ImageUploader({ toast, accent = "emerald" }) {
+ function Navbar({ page, setPage, toast }) {
+   const [open, setOpen] = useState(false);
+   const rewards = useRewards();
++  const auth = useAuth();
+   return (
+     <header className="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-stone-200 shadow-sm shadow-stone-200/40">
+       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+@@ -407,7 +292,11 @@ function Navbar({ page, setPage, toast }) {
+           <button onClick={() => setPage("rewards")} className={`hidden md:flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-full text-sm font-semibold transition-colors ${page === "rewards" ? "bg-emerald-50 text-emerald-700" : "text-stone-600 hover:bg-stone-100"}`}>
+             <Gift size={16} className="text-emerald-600" /> {rewards.balance.toLocaleString()}
+           </button>
+-          <button onClick={() => setPage("dashboard")} className="p-2.5 rounded-lg text-stone-500 hover:bg-stone-100"><User size={18} /></button>
++          {auth.user ? (
++        <button onClick={() => setPage("dashboard")} className="p-2.5 rounded-lg text-stone-500 hover:bg-stone-100"><User size={18} /></button>
++    ) : (
++        <button onClick={() => setPage("login")} className="px-3.5 py-1.5 rounded-lg text-sm font-semibold text-stone-600 hover:text-stone-900 border border-stone-200 ml-2">Log in</button>
++    )}
+           <Button variant="emergency" onClick={() => setPage("emergency")} className="ml-2"><Siren size={16} /> Get Help</Button>
+         </div>
+ 
+@@ -608,7 +497,30 @@ function EmergencyPage({ toast }) {
+   const [severity, setSeverity] = useState("High");
+   const [animalType, setAnimalType] = useState("Dog");
+   const [desc, setDesc] = useState("");
+-  const [located, setLocated] = useState(false);
++  const [reporterLocation, setReporterLocation] = useState(null);
++    const [pickupPoint, setPickupPoint] = useState(null);
++    const [locationMethod, setLocationMethod] = useState("current");
++    const [manualAddress, setManualAddress] = useState("");
++    
++    const fetchCurrentLocation = () => {
++      if (!navigator.geolocation) {
++        toast.push("Geolocation is not supported by your browser", "rose");
++        return;
++      }
++      toast.push("Fetching location...", "amber");
++      navigator.geolocation.getCurrentPosition(
++        (pos) => {
++          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude, timestamp: pos.timestamp };
++          setReporterLocation(coords); // independent snapshot
++          if (locationMethod === "current") {
++            setPickupPoint({ ...coords, address: "Current Location" }); // fixed pickup
++          }
++          toast.push("Location acquired successfully!");
++        },
++        (err) => toast.push("Failed to get location: " + err.message, "rose"),
++        { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
++      );
++    };
+   const [caseId] = useState(`PS-RQ-${Math.floor(1000 + Math.random() * 9000)}`);
+   const [rescueRequested, setRescueRequested] = useState(false);
+ 
+@@ -648,9 +560,32 @@ function EmergencyPage({ toast }) {
+             </div>
+             <div>
+               <label className="text-sm font-semibold text-stone-700 block mb-2">Location</label>
+-              <button onClick={() => { setLocated(true); toast.push("Location shared"); }} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border ${located ? "bg-emerald-50 border-emerald-300 text-emerald-700" : "bg-white border-stone-300 text-stone-600"}`}>
+-                <MapPin size={16} /> {located ? "Location shared: Andheri West, Mumbai" : "Share current location"}
+-              </button>
++              {!pickupPoint ? (
++                <div>
++                  <button onClick={fetchCurrentLocation} className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border bg-white border-stone-300 text-stone-600 hover:bg-stone-50">
++                    <MapPin size={16} /> Share current location
++                  </button>
++                  <p className="text-xs text-stone-500 mt-2">Select an animal pickup point to enable navigation.</p>
++                </div>
++              ) : (
++                <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl space-y-3">
++                  <div className="flex items-center gap-2 text-emerald-700 font-semibold text-sm">
++                    <MapPin size={16} /> Pickup point selected
++                  </div>
++                  <div className="text-xs text-stone-600 font-mono space-y-1">
++                    <p>Latitude: {pickupPoint.lat}</p>
++                    <p>Longitude: {pickupPoint.lng}</p>
++                  </div>
++                  <a 
++                    href={`https://www.google.com/maps/dir/?api=1&destination=${pickupPoint.lat},${pickupPoint.lng}`}
++                    target="_blank" 
++                    rel="noopener noreferrer"
++                    className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-stone-900 text-white rounded-lg text-sm font-medium hover:bg-stone-800 transition-colors"
++                  >
++                    <MapPin size={16} /> Open in Google Maps
++                  </a>
++                </div>
++              )}
+             </div>
+             <div>
+               <label className="text-sm font-semibold text-stone-700 block mb-2">Emergency severity</label>
+@@ -718,6 +653,21 @@ function EmergencyPage({ toast }) {
+             </div>
+           </div>
+ 
++          {pickupPoint && (
++            <Card className="p-4 bg-emerald-50 border-emerald-200 flex flex-col gap-3">
++              <div className="flex items-center gap-2 text-emerald-800 font-semibold text-sm">
++                <MapPin size={16} /> Animal Pickup Point
++              </div>
++              <a 
++                href={`https://www.google.com/maps/dir/?api=1&destination=${pickupPoint.lat},${pickupPoint.lng}`}
++                target="_blank" 
++                rel="noopener noreferrer"
++                className="flex items-center justify-center gap-2 w-fit px-4 py-2 bg-stone-900 text-white rounded-lg text-sm font-medium hover:bg-stone-800 transition-colors"
++              >
++                <MapPin size={16} /> Open in Google Maps
++              </a>
++            </Card>
++          )}
+           <div className="flex flex-wrap gap-3">
+             <Button variant="emergency" disabled={rescueRequested} onClick={() => {
+               setRescueRequested(true);
+@@ -815,7 +765,7 @@ function AdoptPage({ setPage, setSelectedAnimal }) {
+         {filtered.map((a) => (
+           <Card key={a.id} className="overflow-hidden group hover:-translate-y-1 hover:shadow-lg hover:shadow-stone-300/40 transition-all duration-200">
+             <div className="relative overflow-hidden">
+-              <img src={a.img} alt={a.name} className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300" />
++              <ImageWithFallback src={a.img} alt={a.name} className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300" />
+               <div className="absolute top-3 right-3 bg-white/95 backdrop-blur rounded-full px-3 py-1 text-xs font-bold text-emerald-700 flex items-center gap-1 shadow-sm"><Sparkles size={12} /> {a.match}% match</div>
+             </div>
+             <div className="p-5">
+@@ -838,6 +788,7 @@ function AdoptPage({ setPage, setSelectedAnimal }) {
+ }
+ 
+ function AnimalProfilePage({ animal, setPage, toast }) {
++  const auth = useAuth();
+   const rewards = useRewards();
+   const [applied, setApplied] = useState(false);
+   if (!animal) return <div className="max-w-3xl mx-auto px-6 py-20 text-center text-stone-500">Select an animal from the Adopt page first. <button className="text-emerald-700 font-semibold underline" onClick={() => setPage("adopt")}>Go to Adopt</button></div>;
+@@ -846,7 +797,7 @@ function AnimalProfilePage({ animal, setPage, toast }) {
+       <button onClick={() => setPage("adopt")} className="text-sm text-stone-500 flex items-center gap-1 mb-6 hover:text-stone-800"><ArrowLeft size={15} /> Back to all animals</button>
+       <div className="grid lg:grid-cols-2 gap-10">
+         <div>
+-          <img src={animal.img} className="w-full h-[420px] object-cover rounded-2xl" alt={animal.name} />
++          <ImageWithFallback src={animal.img} className="w-full h-[420px] object-cover rounded-2xl" alt={animal.name} />
+           <div className="grid grid-cols-3 gap-3 mt-3">
+             {[1, 2, 3].map((i) => <div key={i} className="h-24 rounded-xl bg-stone-100 flex items-center justify-center text-stone-300"><Camera size={20} /></div>)}
+           </div>
+@@ -926,7 +877,7 @@ function RehomingPage({ toast }) {
+       <div className="grid md:grid-cols-3 gap-5">
+         {cases.map((a) => (
+           <Card key={a.id} className="overflow-hidden">
+-            <img src={a.img} className="h-40 w-full object-cover" alt={a.name} />
++            <ImageWithFallback src={a.img} className="h-40 w-full object-cover" alt={a.name} />
+             <div className="p-4">
+               <p className="font-semibold text-stone-900">{a.name}</p>
+               <p className="text-xs text-stone-500 mt-1">{a.species} • {a.age} • {a.location}</p>
+@@ -963,7 +914,7 @@ function CommunityPage({ toast }) {
+                 </div>
+               </div>
+               <p className="text-sm text-stone-600 mt-4 leading-relaxed">{p.text}</p>
+-              {p.img && <img src={p.img} className="w-full h-56 object-cover rounded-xl mt-4" alt="" />}
++              {p.img && <ImageWithFallback src={p.img} className="w-full h-56 object-cover rounded-xl mt-4" alt="" />}
+               {p.id === 1 && (
+                 <button onClick={() => rewards.submitForVerification("volunteer", `POST-${p.id}`, "Volunteer participation - community rescue")} className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 hover:bg-emerald-100">
+                   <HeartHandshake size={14} /> I volunteered for this rescue <Badge tone="emerald">+75 P-Points</Badge>
+@@ -1004,7 +955,8 @@ function CommunityPage({ toast }) {
+ }
+ 
+ /* ---------------------------------- EVENTS ---------------------------------- */
+-function EventCard({ e, toast }) {
++function EventCard({ e, setPage, toast }) {
++    const auth = useAuth();
+   const rewards = useRewards();
+   const isPaid = e.price !== "Free";
+   const [open, setOpen] = useState(false);
+@@ -1026,7 +978,7 @@ function EventCard({ e, toast }) {
+   return (
+     <Card className="overflow-hidden group hover:-translate-y-1 hover:shadow-lg hover:shadow-stone-300/40 transition-all duration-200">
+       <div className="overflow-hidden relative">
+-        <img src={e.img} className="h-36 w-full object-cover group-hover:scale-105 transition-transform duration-300" alt={e.name} />
++        <ImageWithFallback src={e.img} className="h-36 w-full object-cover group-hover:scale-105 transition-transform duration-300" alt={e.name} />
+         <div className="absolute top-2 right-2">
+           <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${isPaid ? "bg-amber-500 text-white" : "bg-emerald-600 text-white"}`}>{isPaid ? e.price : "FREE"}</span>
+         </div>
+@@ -1083,12 +1035,12 @@ function EventCard({ e, toast }) {
+   );
+ }
+ 
+-function EventsPage({ toast }) {
++function EventsPage({ setPage, toast }) {
+   return (
+     <div className="max-w-7xl mx-auto px-6 py-12">
+       <SectionHeading eyebrow="Get involved" title="Events & meetups" subtitle="Adoption drives, vaccination camps, awareness campaigns and volunteer activities near you. Paid workshops can be discounted with Petsogram Points." />
+       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+-        {EVENTS.map((e) => <EventCard key={e.id} e={e} toast={toast} />)}
++        {EVENTS.map((e) => <EventCard key={e.id} e={e} setPage={setPage} toast={toast} />)}
+       </div>
+     </div>
+   );
+@@ -1272,7 +1224,8 @@ function ServicesPage({ toast }) {
+ }
+ 
+ /* ---------------------------------- MARKETPLACE ---------------------------------- */
+-function ProductCard({ p, tab, toast }) {
++function ProductCard({ p, tab, setPage, toast }) {
++    const auth = useAuth();
+   const rewards = useRewards();
+   const [open, setOpen] = useState(false);
+   const [redemption, setRedemption] = useState(null); // { points, discount, finalPrice }
+@@ -1286,7 +1239,7 @@ function ProductCard({ p, tab, toast }) {
+ 
+   return (
+     <Card className="overflow-hidden">
+-      <img src={p.img} className="h-36 w-full object-cover" alt={p.name} />
++      <ImageWithFallback src={p.img} className="h-36 w-full object-cover" alt={p.name} />
+       <div className="p-4">
+         <p className="font-semibold text-stone-900 text-sm">{p.name}</p>
+         <p className="text-xs text-stone-500 mt-1">{p.condition} • {p.location}</p>
+@@ -1337,7 +1290,7 @@ function ProductCard({ p, tab, toast }) {
+   );
+ }
+ 
+-function MarketplacePage({ toast }) {
++function MarketplacePage({ setPage, toast }) {
+   const [tab, setTab] = useState("New");
+   return (
+     <div className="max-w-7xl mx-auto px-6 py-12">
+@@ -1348,7 +1301,7 @@ function MarketplacePage({ toast }) {
+         ))}
+       </div>
+       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+-        {(PRODUCTS[tab] || PRODUCTS.New).map((p) => <ProductCard key={p.id} p={p} tab={tab} toast={toast} />)}
++        {(PRODUCTS[tab] || PRODUCTS.New).map((p) => <ProductCard key={p.id} p={p} tab={tab} setPage={setPage} toast={toast} />)}
+       </div>
+     </div>
+   );
+@@ -1546,7 +1499,7 @@ function DashboardPage({ setPage }) {
+         <Card className="p-6">
+           <p className="font-semibold text-stone-800 mb-4">Saved animals</p>
+           <div className="grid grid-cols-3 gap-3">
+-            {ANIMALS.slice(0, 3).map((a) => <img key={a.id} src={a.img} className="h-20 w-full object-cover rounded-lg" alt={a.name} />)}
++            {ANIMALS.slice(0, 3).map((a) => <ImageWithFallback key={a.id} src={a.img} className="h-20 w-full object-cover rounded-lg" alt={a.name} />)}
+           </div>
+         </Card>
+       </div>
+@@ -1704,7 +1657,13 @@ function LoginPage({ setPage, toast }) {
+       <Card className="p-6 space-y-4">
+         <div><label className="text-xs font-semibold text-stone-500 mb-1.5 block">Email</label><div className="flex items-center border border-stone-300 rounded-lg px-3"><Mail size={15} className="text-stone-400" /><input className="w-full px-2 py-2.5 text-sm outline-none" placeholder="you@example.com" /></div></div>
+         <div><label className="text-xs font-semibold text-stone-500 mb-1.5 block">Password</label><div className="flex items-center border border-stone-300 rounded-lg px-3"><Lock size={15} className="text-stone-400" /><input type="password" className="w-full px-2 py-2.5 text-sm outline-none" placeholder="••••••••" /></div></div>
+-        <Button variant="primary" className="w-full py-2.5" onClick={() => { toast.push("Logged in successfully"); setPage("dashboard"); }}>Log in</Button>
++        <Button variant="primary" className="w-full py-2.5" onClick={() => {
++        auth.login();
++        toast.push("Logged in successfully");
++        if (auth.pendingAction) { auth.pendingAction(); auth.setPendingAction(null); }
++        else if (auth.pendingPage) { setPage(auth.pendingPage); auth.setPendingPage(null); }
++        else { setPage("dashboard"); }
++    }}>Log in</Button>
+         <p className="text-center text-xs text-stone-500">Don't have an account? <button onClick={() => setPage("signup")} className="text-emerald-700 font-semibold">Sign up</button></p>
+       </Card>
+     </div>
+@@ -1712,6 +1671,7 @@ function LoginPage({ setPage, toast }) {
+ }
+ 
+ function SignupPage({ setPage, toast }) {
++    const auth = useAuth();
+   const roles = ["Pet Owner", "Volunteer", "Rescuer", "Veterinarian", "NGO/Shelter", "Service Provider"];
+   const [role, setRole] = useState("Pet Owner");
+   return (
+@@ -1730,7 +1690,7 @@ function SignupPage({ setPage, toast }) {
+             {roles.map((r) => <button key={r} onClick={() => setRole(r)} className={`px-3 py-2 rounded-lg text-xs font-medium border ${role === r ? "bg-emerald-700 text-white border-emerald-700" : "bg-white text-stone-600 border-stone-200"}`}>{r}</button>)}
+           </div>
+         </div>
+-        <Button variant="primary" className="w-full py-2.5" onClick={() => { toast.push("Account created — welcome to Petsogram!"); setPage("dashboard"); }}>Create account</Button>
++        <Button variant="primary" className="w-full py-2.5" onClick={() => { auth.login(); toast.push("Account created — welcome to Petsogram!"); setPage("dashboard"); }}>Create account</Button>
+         <p className="text-center text-xs text-stone-500">Already have an account? <button onClick={() => setPage("login")} className="text-emerald-700 font-semibold">Log in</button></p>
+       </Card>
+     </div>
+@@ -1780,7 +1740,7 @@ function SettingsPage({ toast }) {
+           </div>
+         ))}
+         <Button variant="primary" onClick={() => toast.push("Settings saved")}>Save changes</Button>
+-        <button className="flex items-center gap-2 text-rose-600 text-sm font-medium pt-2"><LogOut size={15} /> Log out</button>
++        <button onClick={() => { auth.logout(); setPage("home"); toast.push("Logged out successfully"); }} className="flex items-center gap-2 text-rose-600 text-sm font-medium pt-2"><LogOut size={15} /> Log out</button>
+       </Card>
+     </div>
+   );
+@@ -1792,7 +1752,18 @@ export default function PetsogramApp() {
+   const [page, setPageRaw] = useState("home");
+   const [selectedAnimal, setSelectedAnimal] = useState(null);
+   const toast = useToast();
+-  const setPage = (p) => { setPageRaw(p); window.scrollTo({ top: 0, behavior: "smooth" }); };
++  const auth = useAuth();
++  const setPage = (p) => {
++    const protectedPages = ["dashboard", "rewards", "profile", "settings", "admin"];
++    if (protectedPages.includes(p) && !auth.user) {
++      auth.setPendingPage(p);
++      setPageRaw("login");
++      window.scrollTo({ top: 0, behavior: "smooth" });
++      return;
++    }
++    setPageRaw(p); 
++    window.scrollTo({ top: 0, behavior: "smooth" }); 
++  };
+ 
+   const pages = {
+     home: <HomePage setPage={setPage} toast={toast} />,
+@@ -1802,11 +1773,11 @@ export default function PetsogramApp() {
+     animalProfile: <AnimalProfilePage animal={selectedAnimal} setPage={setPage} toast={toast} />,
+     rehoming: <RehomingPage toast={toast} />,
+     community: <CommunityPage toast={toast} />,
+-    events: <EventsPage toast={toast} />,
+-    report: <ReportAbusePage toast={toast} />,
++    events: <EventsPage setPage={setPage} toast={toast} />,
++    report: <ReportAbusePage setPage={setPage} toast={toast} />,
+     donate: <DonatePage toast={toast} />,
+     services: <ServicesPage toast={toast} />,
+-    marketplace: <MarketplacePage toast={toast} />,
++    marketplace: <MarketplacePage setPage={setPage} toast={toast} />,
+     rewards: <RewardsPage setPage={setPage} toast={toast} />,
+     dashboard: <DashboardPage setPage={setPage} />,
+     admin: <AdminDashboardPage />,
